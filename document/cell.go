@@ -7,12 +7,16 @@
 
 package document
 
-import "github.com/luckymark84/gooxml/schema/soo/wml"
+import (
+	"github.com/luckymark84/gooxml/schema/soo/wml"
+	"sync"
+)
 
 // Cell is a table cell within a document (not a spreadsheet)
 type Cell struct {
-	d *Document
-	x *wml.CT_Tc
+	d   *Document
+	x   *wml.CT_Tc
+	sdt *wml.CT_SdtCell
 }
 
 // X returns the inner wrapped XML type.
@@ -63,4 +67,70 @@ func (c Cell) Paragraphs() []Paragraph {
 		}
 	}
 	return ret
+}
+
+type DropDownControl struct {
+	mu      sync.Mutex
+	pr      *wml.CT_SdtPr
+	Tag     string
+	content *wml.CT_Text
+}
+
+type Option struct {
+	Label string
+	Value string
+}
+
+func (d *DropDownControl) GetOptions() []*Option {
+	var options []*Option
+	for _, item := range d.pr.Choice.DropDownList.ListItem {
+		option := Option{
+			*item.DisplayTextAttr,
+			*item.ValueAttr,
+		}
+		options = append(options, &option)
+	}
+	return options
+}
+
+func (d *DropDownControl) SelectByValue(value string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	for _, option := range d.GetOptions() {
+		if option.Value == value {
+			d.content.Content = value
+		}
+	}
+}
+
+func (c Cell) ContentControls() *DropDownControl {
+	if c.sdt != nil {
+		var content *wml.CT_Text
+		for _, ctCell := range c.sdt.SdtContent.Tc {
+			for _, ble := range ctCell.EG_BlockLevelElts {
+				for _, cbc := range ble.EG_ContentBlockContent {
+					for _, p := range cbc.P {
+						for _, pc := range p.EG_PContent {
+							for _, crc := range pc.EG_ContentRunContent {
+								if crc.R == nil {
+									continue
+								}
+								for _, ric := range crc.R.EG_RunInnerContent {
+									content = ric.T
+									goto Label
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	Label:
+		if content == nil {
+			return nil
+		}
+
+		return &DropDownControl{pr: c.sdt.SdtPr, Tag: c.sdt.SdtPr.Tag.ValAttr, content: content}
+	}
+	return nil
 }

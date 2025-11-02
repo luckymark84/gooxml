@@ -28,7 +28,7 @@ func (r Row) AddCell() Cell {
 	r.x.EG_ContentCellContent = append(r.x.EG_ContentCellContent, cc)
 	tc := wml.NewCT_Tc()
 	cc.Tc = append(cc.Tc, tc)
-	return Cell{r.d, tc}
+	return Cell{r.d, tc, nil}
 }
 
 // Properties returns the row properties.
@@ -44,11 +44,11 @@ func (r Row) Cells() []Cell {
 	ret := []Cell{}
 	for _, cc := range r.x.EG_ContentCellContent {
 		for _, ctCell := range cc.Tc {
-			ret = append(ret, Cell{r.d, ctCell})
+			ret = append(ret, Cell{r.d, ctCell, nil})
 		}
 		if cc.Sdt != nil && cc.Sdt.SdtContent != nil {
 			for _, ctCell := range cc.Sdt.SdtContent.Tc {
-				ret = append(ret, Cell{r.d, ctCell})
+				ret = append(ret, Cell{r.d, ctCell, cc.Sdt})
 			}
 		}
 	}
