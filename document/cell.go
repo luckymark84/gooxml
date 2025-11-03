@@ -134,3 +134,21 @@ func (c Cell) ContentControls() *DropDownControl {
 	}
 	return nil
 }
+
+func (c Cell) SetContentText(text string) error {
+	for _, ble := range c.x.EG_BlockLevelElts {
+		for _, cbc := range ble.EG_ContentBlockContent {
+			for _, p := range cbc.P {
+				for _, pc := range p.EG_PContent {
+					for _, crc := range pc.EG_ContentRunContent {
+						for _, ric := range crc.R.EG_RunInnerContent {
+							ric.T.Content = text
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
