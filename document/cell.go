@@ -141,6 +141,9 @@ func (c Cell) SetContentText(text string) error {
 			for _, p := range cbc.P {
 				for _, pc := range p.EG_PContent {
 					for _, crc := range pc.EG_ContentRunContent {
+						if crc.R == nil {
+							continue
+						}
 						for _, ric := range crc.R.EG_RunInnerContent {
 							ric.T.Content = text
 							break
