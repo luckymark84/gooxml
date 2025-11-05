@@ -289,46 +289,46 @@ func (p Paragraph) AddDateControl(format string, value string) {
 
 }
 
-func (p Paragraph) ControlWidgets() []StructuredDocument {
-	p.ensurePPr()
-
-	var sdts []StructuredDocument
-
-	for _, pc := range p.x.EG_PContent {
-		for _, crc := range pc.EG_ContentRunContent {
-			if crc.Sdt == nil || crc.Sdt.SdtPr == nil {
-				continue
-			}
-			sdt := StructuredDocument{
-				d:  p.d,
-				pr: crc.Sdt.SdtPr,
-				c:  crc.Sdt.SdtContent,
-				x:  crc.Sdt,
-			}
-			sdts = append(sdts, sdt)
-		}
-	}
-	return sdts
-}
-
-func (p Paragraph) AddDropDownList(sdtPr *wml.CT_SdtPr, sdtContent *wml.CT_SdtContentRun) *StructuredDocument {
-	// 添加下拉控件（sdt）
-	pc := wml.NewEG_PContent()
-	p.x.EG_PContent = append(p.x.EG_PContent, pc)
-
-	rc := wml.NewEG_ContentRunContent()
-	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, rc)
-
-	sdt := &wml.CT_SdtRun{
-		SdtPr:      sdtPr,
-		SdtContent: sdtContent,
-	}
-
-	rc.Sdt = sdt
-	return &StructuredDocument{
-		d:  p.d,
-		pr: sdtPr,
-		c:  sdtContent,
-		x:  sdt,
-	}
-}
+//func (p Paragraph) ControlWidgets() []StructuredDocument {
+//	p.ensurePPr()
+//
+//	var sdts []StructuredDocument
+//
+//	for _, pc := range p.x.EG_PContent {
+//		for _, crc := range pc.EG_ContentRunContent {
+//			if crc.Sdt == nil || crc.Sdt.SdtPr == nil {
+//				continue
+//			}
+//			sdt := StructuredDocument{
+//				d:  p.d,
+//				pr: crc.Sdt.SdtPr,
+//				c:  crc.Sdt.SdtContent,
+//				x:  crc.Sdt,
+//			}
+//			sdts = append(sdts, sdt)
+//		}
+//	}
+//	return sdts
+//}
+//
+//func (p Paragraph) AddDropDownList(sdtPr *wml.CT_SdtPr, sdtContent *wml.CT_SdtContentRun) *StructuredDocument {
+//	// 添加下拉控件（sdt）
+//	pc := wml.NewEG_PContent()
+//	p.x.EG_PContent = append(p.x.EG_PContent, pc)
+//
+//	rc := wml.NewEG_ContentRunContent()
+//	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, rc)
+//
+//	sdt := &wml.CT_SdtRun{
+//		SdtPr:      sdtPr,
+//		SdtContent: sdtContent,
+//	}
+//
+//	rc.Sdt = sdt
+//	return &StructuredDocument{
+//		d:  p.d,
+//		pr: sdtPr,
+//		c:  sdtContent,
+//		x:  sdt,
+//	}
+//}
