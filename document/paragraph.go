@@ -310,3 +310,25 @@ func (p Paragraph) ControlWidgets() []StructuredDocument {
 	}
 	return sdts
 }
+
+func (p Paragraph) AddDropDownList(sdtPr *wml.CT_SdtPr, sdtContent *wml.CT_SdtContentRun) *StructuredDocument {
+	// 添加下拉控件（sdt）
+	pc := wml.NewEG_PContent()
+	p.x.EG_PContent = append(p.x.EG_PContent, pc)
+
+	rc := wml.NewEG_ContentRunContent()
+	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, rc)
+
+	sdt := &wml.CT_SdtRun{
+		SdtPr:      sdtPr,
+		SdtContent: sdtContent,
+	}
+
+	rc.Sdt = sdt
+	return &StructuredDocument{
+		d:  p.d,
+		pr: sdtPr,
+		c:  sdtContent,
+		x:  sdt,
+	}
+}
