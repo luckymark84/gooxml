@@ -6,10 +6,10 @@ type StructuredDocument struct {
 	d  *Document
 	pr *wml.CT_SdtPr
 	c  *wml.CT_SdtContentRun
-	x  *wml.CT_SdtRun
+	x  *wml.CT_SdtCell
 }
 
-func (s StructuredDocument) X() *wml.CT_SdtRun {
+func (s StructuredDocument) X() *wml.CT_SdtCell {
 	return s.x
 }
 

@@ -103,6 +103,13 @@ func (d *DropDownControl) SelectByValue(value string) {
 	}
 }
 
+func (c Cell) DropDownListSdt() *StructuredDocument {
+	if c.sdt != nil {
+		return &StructuredDocument{d: c.d, x: c.sdt}
+	}
+	return nil
+}
+
 func (c Cell) ContentControls() *DropDownControl {
 	if c.sdt != nil {
 		var content *wml.CT_Text
