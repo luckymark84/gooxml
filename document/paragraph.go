@@ -90,7 +90,7 @@ func (p Paragraph) AddRun() Run {
 
 // Runs returns all of the runs in a paragraph.
 func (p Paragraph) Runs() []Run {
-	ret := []Run{}
+	var ret []Run
 	for _, c := range p.x.EG_PContent {
 		for _, rc := range c.EG_ContentRunContent {
 			if rc.R != nil {
@@ -287,4 +287,25 @@ func (p Paragraph) AddDateControl(format string, value string) {
 
 	rc.Sdt = sdt
 
+}
+
+func (p Paragraph) ControlWidgets() []StructuredDocument {
+	p.ensurePPr()
+
+	var sdts []StructuredDocument
+
+	for _, pc := range p.x.EG_PContent {
+		for _, crc := range pc.EG_ContentRunContent {
+			if crc.Sdt == nil || crc.Sdt.SdtPr == nil {
+				continue
+			}
+			sdt := StructuredDocument{
+				d:  p.d,
+				pr: crc.Sdt.SdtPr,
+				c:  crc.Sdt.SdtContent,
+			}
+			sdts = append(sdts, sdt)
+		}
+	}
+	return sdts
 }
