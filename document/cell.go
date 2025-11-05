@@ -110,6 +110,11 @@ func (c Cell) DropDownListSdt() *StructuredDocument {
 	return nil
 }
 
+func (c Cell) AddDropDownSdt(sdt *wml.CT_SdtCell) *StructuredDocument {
+	c.sdt = sdt
+	return &StructuredDocument{d: c.d, x: c.sdt}
+}
+
 func (c Cell) ContentControls() *DropDownControl {
 	if c.sdt != nil {
 		var content *wml.CT_Text
