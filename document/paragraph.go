@@ -8,7 +8,9 @@
 package document
 
 import (
+	"github.com/luckymark84/gooxml/schema/soo/ofc/sharedTypes"
 	"github.com/luckymark84/gooxml/schema/soo/wml"
+	"time"
 )
 
 // Paragraph is a paragraph within a document.
@@ -243,4 +245,46 @@ func (p Paragraph) SetNumberingDefinitionByID(abstractNumberID int64) {
 	lvl := wml.NewCT_DecimalNumber()
 	lvl.ValAttr = int64(abstractNumberID)
 	p.x.PPr.NumPr.NumId = lvl
+}
+
+// AddDateControl add date control widget
+func (p Paragraph) AddDateControl(format string, value string) {
+	// 创建日期控件（sdt）
+	pc := wml.NewEG_PContent()
+	p.x.EG_PContent = append(p.x.EG_PContent, pc)
+
+	rc := wml.NewEG_ContentRunContent()
+	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, rc)
+
+	r := wml.NewCT_R()
+	ric := wml.NewEG_RunInnerContent()
+	ric.T = wml.NewCT_Text()
+	ric.T.Content = value
+	r.EG_RunInnerContent = append(r.EG_RunInnerContent, ric)
+
+	date, _ := time.Parse(time.RFC3339, value)
+
+	sdt := &wml.CT_SdtRun{
+		SdtPr: &wml.CT_SdtPr{
+			Choice: &wml.CT_SdtPrChoice{
+				Date: &wml.CT_SdtDate{
+					FullDateAttr:      &date,
+					DateFormat:        &wml.CT_String{ValAttr: format},
+					Lid:               &wml.CT_Lang{ValAttr: "zh-CN"},
+					StoreMappedDataAs: &wml.CT_SdtDateMappingType{ValAttr: wml.ST_SdtDateMappingTypeDateTime},
+					Calendar:          &wml.CT_CalendarType{ValAttr: sharedTypes.ST_CalendarTypeGregorian},
+				},
+			},
+		},
+		SdtContent: &wml.CT_SdtContentRun{
+			EG_ContentRunContent: []*wml.EG_ContentRunContent{
+				{
+					R: r,
+				},
+			},
+		},
+	}
+
+	rc.Sdt = sdt
+
 }
