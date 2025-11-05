@@ -303,6 +303,7 @@ func (p Paragraph) ControlWidgets() []StructuredDocument {
 				d:  p.d,
 				pr: crc.Sdt.SdtPr,
 				c:  crc.Sdt.SdtContent,
+				x:  crc.Sdt,
 			}
 			sdts = append(sdts, sdt)
 		}

@@ -6,8 +6,9 @@ type StructuredDocument struct {
 	d  *Document
 	pr *wml.CT_SdtPr
 	c  *wml.CT_SdtContentRun
+	x  *wml.CT_SdtRun
 }
 
-//func (p Paragraph) DropDownList()  {
-//
-//}
+func (s StructuredDocument) X() *wml.CT_SdtRun {
+	return s.x
+}
