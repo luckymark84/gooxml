@@ -43,14 +43,14 @@ func (m *EG_ContentCellContent) MarshalXML(e *xml.Encoder, start xml.StartElemen
 		secustomXml := xml.StartElement{Name: xml.Name{Local: "w:customXml"}}
 		e.EncodeElement(m.CustomXml, secustomXml)
 	}
-	if m.Sdt != nil {
-		sesdt := xml.StartElement{Name: xml.Name{Local: "w:sdt"}}
-		e.EncodeElement(m.Sdt, sesdt)
-	}
 	if m.EG_RunLevelElts != nil {
 		for _, c := range m.EG_RunLevelElts {
 			c.MarshalXML(e, xml.StartElement{})
 		}
+	}
+	if m.Sdt != nil {
+		sesdt := xml.StartElement{Name: xml.Name{Local: "w:sdt"}}
+		e.EncodeElement(m.Sdt, sesdt)
 	}
 	return nil
 }
