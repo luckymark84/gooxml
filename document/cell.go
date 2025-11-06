@@ -8,7 +8,6 @@
 package document
 
 import (
-	"fmt"
 	"github.com/luckymark84/gooxml/schema/soo/wml"
 )
 
@@ -78,8 +77,6 @@ func (s SdtCell) ListItem() []*wml.CT_SdtListItem {
 }
 
 func (s SdtCell) SelectByValue(value string) {
-	fmt.Printf("%+v\n", s.s.SdtContent.Tc[0].EG_BlockLevelElts[0].
-		EG_ContentBlockContent[0].P[0].EG_PContent[1].EG_ContentRunContent[0].R.EG_RunInnerContent[0].T)
 	crc := wml.NewEG_ContentRunContent()
 
 	ric := wml.NewEG_RunInnerContent()
@@ -143,8 +140,9 @@ func (c Cell) DropDownListSdt() *StructuredDocument {
 	return nil
 }
 
-func (c Cell) AddDropDownSdt(sdt *wml.CT_SdtCell) *StructuredDocument {
-	c.sdt = sdt
-	sdtCell := SdtCell{c.sdt}
-	return &StructuredDocument{d: c.d, x: sdtCell}
+func (c Cell) GetSdtCell() *SdtCell {
+
+	return &SdtCell{
+		s: c.sdt,
+	}
 }
