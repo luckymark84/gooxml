@@ -205,7 +205,7 @@ func (d *Document) MailMerge(mergeContent map[string]string) {
 				rc := &wml.EG_ContentRunContent{}
 				rc.R = v.pc.FldSimple[0].EG_PContent[0].EG_ContentRunContent[0].R
 				v.pc.FldSimple = nil
-				run := Run{d, rc.R}
+				run := Run{d, rc.R, nil}
 				run.ClearContent()
 				run.AddText(repText)
 				v.pc.EG_ContentRunContent = append(v.pc.EG_ContentRunContent, rc)

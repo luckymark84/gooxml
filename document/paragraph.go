@@ -85,7 +85,7 @@ func (p Paragraph) AddRun() Run {
 	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, rc)
 	r := wml.NewCT_R()
 	rc.R = r
-	return Run{p.d, r}
+	return Run{p.d, r, nil}
 }
 
 // Runs returns all of the runs in a paragraph.
@@ -94,12 +94,12 @@ func (p Paragraph) Runs() []Run {
 	for _, c := range p.x.EG_PContent {
 		for _, rc := range c.EG_ContentRunContent {
 			if rc.R != nil {
-				ret = append(ret, Run{p.d, rc.R})
+				ret = append(ret, Run{p.d, rc.R, nil})
 			}
 			if rc.Sdt != nil && rc.Sdt.SdtContent != nil {
 				for _, rc2 := range rc.Sdt.SdtContent.EG_ContentRunContent {
 					if rc2.R != nil {
-						ret = append(ret, Run{p.d, rc2.R})
+						ret = append(ret, Run{p.d, rc2.R, rc.Sdt})
 					}
 				}
 			}
@@ -133,7 +133,7 @@ func (p Paragraph) insertRun(relativeTo Run, before bool) Run {
 					c.EG_ContentRunContent[i+1] = wml.NewEG_ContentRunContent()
 					c.EG_ContentRunContent[i+1].R = r
 				}
-				return Run{p.d, r}
+				return Run{p.d, r, nil}
 
 			}
 			if rc.Sdt != nil && rc.Sdt.SdtContent != nil {
@@ -150,7 +150,7 @@ func (p Paragraph) insertRun(relativeTo Run, before bool) Run {
 							rc.Sdt.SdtContent.EG_ContentRunContent[i+1] = wml.NewEG_ContentRunContent()
 							rc.Sdt.SdtContent.EG_ContentRunContent[i+1].R = r
 						}
-						return Run{p.d, r}
+						return Run{p.d, r, rc.Sdt}
 					}
 				}
 			}
@@ -289,46 +289,98 @@ func (p Paragraph) AddDateControl(format string, value string) {
 
 }
 
-//func (p Paragraph) ControlWidgets() []StructuredDocument {
-//	p.ensurePPr()
-//
-//	var sdts []StructuredDocument
-//
-//	for _, pc := range p.x.EG_PContent {
-//		for _, crc := range pc.EG_ContentRunContent {
-//			if crc.Sdt == nil || crc.Sdt.SdtPr == nil {
-//				continue
-//			}
-//			sdt := StructuredDocument{
-//				d:  p.d,
-//				pr: crc.Sdt.SdtPr,
-//				c:  crc.Sdt.SdtContent,
-//				x:  crc.Sdt,
-//			}
-//			sdts = append(sdts, sdt)
-//		}
-//	}
-//	return sdts
-//}
-//
-//func (p Paragraph) AddDropDownList(sdtPr *wml.CT_SdtPr, sdtContent *wml.CT_SdtContentRun) *StructuredDocument {
-//	// 添加下拉控件（sdt）
-//	pc := wml.NewEG_PContent()
-//	p.x.EG_PContent = append(p.x.EG_PContent, pc)
-//
-//	rc := wml.NewEG_ContentRunContent()
-//	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, rc)
-//
-//	sdt := &wml.CT_SdtRun{
-//		SdtPr:      sdtPr,
-//		SdtContent: sdtContent,
-//	}
-//
-//	rc.Sdt = sdt
-//	return &StructuredDocument{
-//		d:  p.d,
-//		pr: sdtPr,
-//		c:  sdtContent,
-//		x:  sdt,
-//	}
-//}
+func (p Paragraph) AddStructureDocument() StructuredDocument {
+	pc := wml.NewEG_PContent()
+	p.x.EG_PContent = append(p.x.EG_PContent, pc)
+
+	rc := wml.NewEG_ContentRunContent()
+	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, rc)
+
+	r := wml.NewCT_R()
+	ric := wml.NewEG_RunInnerContent()
+	ric.T = wml.NewCT_Text()
+	ric.T.Content = ""
+	r.EG_RunInnerContent = append(r.EG_RunInnerContent, ric)
+
+	sdt := &wml.CT_SdtRun{
+		SdtPr:      &wml.CT_SdtPr{},
+		SdtContent: &wml.CT_SdtContentRun{},
+		SdtEndPr:   &wml.CT_SdtEndPr{},
+	}
+	rc.Sdt = sdt
+
+	sdtRun := SdtRun{sdt}
+
+	return StructuredDocument{d: p.d, pr: sdt.SdtPr, x: sdtRun}
+
+}
+func (p Paragraph) DropDownListSdt() *StructuredDocument {
+	for _, pc := range p.x.EG_PContent {
+		for _, crc := range pc.EG_ContentRunContent {
+			if crc.Sdt != nil {
+				sdtRun := SdtRun{s: crc.Sdt}
+				return &StructuredDocument{
+					d:  p.d,
+					pr: crc.Sdt.SdtPr,
+					x:  sdtRun,
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (p Paragraph) AddDropDownListSdt(sdt *wml.CT_SdtRun) StructuredDocument {
+	pc := wml.NewEG_PContent()
+	p.x.EG_PContent = append(p.x.EG_PContent, pc)
+	crc := wml.NewEG_ContentRunContent()
+	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, crc)
+
+	crc.Sdt = sdt
+
+	sdtRun := SdtRun{sdt}
+	return StructuredDocument{d: p.d, pr: sdt.SdtPr, x: sdtRun}
+}
+
+type SdtRun struct {
+	s *wml.CT_SdtRun
+}
+
+func (s SdtRun) ListItem() []*wml.CT_SdtListItem {
+	return s.s.SdtPr.Choice.DropDownList.ListItem
+}
+
+func (s SdtRun) SelectByValue(value string) {
+	updated := func(s SdtRun) bool {
+		for _, crc := range s.s.SdtContent.EG_ContentRunContent {
+			if crc.R == nil {
+				continue
+			}
+
+			for _, ric := range crc.R.EG_RunInnerContent {
+				if ric.T == nil {
+					continue
+				}
+
+				ric.T.Content = value
+				return true
+			}
+		}
+		return false
+	}
+
+	if updated(s) {
+		return
+	}
+
+	ric := wml.NewEG_RunInnerContent()
+	ric.T = wml.NewCT_Text()
+	ric.T.Content = value
+
+	crc := wml.NewEG_ContentRunContent()
+	crc.R = wml.NewCT_R()
+	crc.R.EG_RunInnerContent = append(crc.R.EG_RunInnerContent, ric)
+
+	s.s.SdtContent.EG_ContentRunContent = append(s.s.SdtContent.EG_ContentRunContent, crc)
+
+}

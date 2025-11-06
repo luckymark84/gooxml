@@ -23,8 +23,9 @@ import (
 
 // Run is a run of text within a paragraph that shares the same formatting.
 type Run struct {
-	d *Document
-	x *wml.CT_R
+	d   *Document
+	x   *wml.CT_R
+	sdt *wml.CT_SdtRun
 }
 
 // X returns the inner wrapped XML type.

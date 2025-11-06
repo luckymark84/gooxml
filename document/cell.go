@@ -8,8 +8,8 @@
 package document
 
 import (
+	"fmt"
 	"github.com/luckymark84/gooxml/schema/soo/wml"
-	"sync"
 )
 
 // Cell is a table cell within a document (not a spreadsheet)
@@ -69,101 +69,82 @@ func (c Cell) Paragraphs() []Paragraph {
 	return ret
 }
 
-type DropDownControl struct {
-	mu      sync.Mutex
-	pr      *wml.CT_SdtPr
-	Tag     string
-	content *wml.CT_Text
+type SdtCell struct {
+	s *wml.CT_SdtCell
 }
 
-type Option struct {
-	Label string
-	Value string
+func (s SdtCell) ListItem() []*wml.CT_SdtListItem {
+	return s.s.SdtPr.Choice.DropDownList.ListItem
 }
 
-func (d *DropDownControl) GetOptions() []*Option {
-	var options []*Option
-	for _, item := range d.pr.Choice.DropDownList.ListItem {
-		option := Option{
-			*item.DisplayTextAttr,
-			*item.ValueAttr,
-		}
-		options = append(options, &option)
+func (s SdtCell) SelectByValue(value string) {
+	fmt.Printf("%+v\n", s.s.SdtContent.Tc[0].EG_BlockLevelElts[0].
+		EG_ContentBlockContent[0].P[0].EG_PContent[1].EG_ContentRunContent[0].R.EG_RunInnerContent[0].T)
+	crc := wml.NewEG_ContentRunContent()
+
+	ric := wml.NewEG_RunInnerContent()
+	ric.T = &wml.CT_Text{Content: value}
+
+	crc.R = wml.NewCT_R()
+	crc.R.EG_RunInnerContent = append(crc.R.EG_RunInnerContent, ric)
+
+	p := &wml.CT_P{
+		EG_PContent: []*wml.EG_PContent{
+			{
+				EG_ContentRunContent: []*wml.EG_ContentRunContent{crc},
+			},
+		},
 	}
-	return options
-}
 
-func (d *DropDownControl) SelectByValue(value string) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	for _, option := range d.GetOptions() {
-		if option.Value == value {
-			d.content.Content = value
-		}
+	cbc := wml.NewEG_ContentBlockContent()
+	cbc.P = append(cbc.P, p)
+
+	ble := wml.NewEG_BlockLevelElts()
+	ble.EG_ContentBlockContent = append(ble.EG_ContentBlockContent, cbc)
+
+	tc := &wml.CT_Tc{
+		EG_BlockLevelElts: []*wml.EG_BlockLevelElts{ble},
 	}
-}
 
-func (c Cell) DropDownListSdt() *StructuredDocument {
-	if c.sdt != nil {
-		return &StructuredDocument{d: c.d, x: c.sdt}
+	if s.s.SdtContent.Tc == nil {
+		s.s.SdtContent.Tc = append(s.s.SdtContent.Tc, tc)
+		return
 	}
-	return nil
-}
 
-func (c Cell) AddDropDownSdt(sdt *wml.CT_SdtCell) *StructuredDocument {
-	c.sdt = sdt
-	return &StructuredDocument{d: c.d, x: c.sdt}
-}
-
-func (c Cell) ContentControls() *DropDownControl {
-	if c.sdt != nil {
-		var content *wml.CT_Text
-		for _, ctCell := range c.sdt.SdtContent.Tc {
-			for _, ble := range ctCell.EG_BlockLevelElts {
-				for _, cbc := range ble.EG_ContentBlockContent {
-					for _, p := range cbc.P {
-						for _, pc := range p.EG_PContent {
-							for _, crc := range pc.EG_ContentRunContent {
-								if crc.R == nil {
+	for _, stc := range s.s.SdtContent.Tc {
+		for _, sble := range stc.EG_BlockLevelElts {
+			for _, scbc := range sble.EG_ContentBlockContent {
+				for _, pp := range scbc.P {
+					for _, pc := range pp.EG_PContent {
+						for _, scrc := range pc.EG_ContentRunContent {
+							if scrc.R == nil {
+								continue
+							}
+							for _, sric := range scrc.R.EG_RunInnerContent {
+								if sric.T == nil {
 									continue
 								}
-								for _, ric := range crc.R.EG_RunInnerContent {
-									content = ric.T
-									goto Label
-								}
+								sric.T.Content = value
 							}
 						}
 					}
 				}
 			}
 		}
-	Label:
-		if content == nil {
-			return nil
-		}
+	}
 
-		return &DropDownControl{pr: c.sdt.SdtPr, Tag: c.sdt.SdtPr.Tag.ValAttr, content: content}
+}
+
+func (c Cell) DropDownListSdt() *StructuredDocument {
+	if c.sdt != nil {
+		sdtCell := SdtCell{c.sdt}
+		return &StructuredDocument{d: c.d, x: sdtCell, pr: c.sdt.SdtPr}
 	}
 	return nil
 }
 
-func (c Cell) SetContentText(text string) error {
-	for _, ble := range c.x.EG_BlockLevelElts {
-		for _, cbc := range ble.EG_ContentBlockContent {
-			for _, p := range cbc.P {
-				for _, pc := range p.EG_PContent {
-					for _, crc := range pc.EG_ContentRunContent {
-						if crc.R == nil {
-							continue
-						}
-						for _, ric := range crc.R.EG_RunInnerContent {
-							ric.T.Content = text
-							break
-						}
-					}
-				}
-			}
-		}
-	}
-	return nil
+func (c Cell) AddDropDownSdt(sdt *wml.CT_SdtCell) *StructuredDocument {
+	c.sdt = sdt
+	sdtCell := SdtCell{c.sdt}
+	return &StructuredDocument{d: c.d, x: sdtCell}
 }
