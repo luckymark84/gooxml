@@ -55,15 +55,18 @@ func (r Row) Cells() []Cell {
 	return ret
 }
 
-func (r Row) AddSdtCell(sdt SdtCell) StructuredDocument {
+func (r Row) AddSdtCell(sdt SdtCell, rle ...*wml.EG_RunLevelElts) StructuredDocument {
 	cc := wml.NewEG_ContentCellContent()
+	if rle != nil {
+		cc.EG_RunLevelElts = append(cc.EG_RunLevelElts, rle...)
+	}
 	r.x.EG_ContentCellContent = append(r.x.EG_ContentCellContent, cc)
 
 	cc.Sdt = wml.NewCT_SdtCell()
 	cc.Sdt.SdtPr = sdt.s.SdtPr
 	cc.Sdt.SdtContent = sdt.s.SdtContent
 	cc.Sdt.SdtEndPr = sdt.s.SdtEndPr
-	
+
 	return StructuredDocument{
 		d:  r.d,
 		pr: cc.Sdt.SdtPr,
