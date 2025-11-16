@@ -39,6 +39,11 @@ func NewEG_ContentRunContent() *EG_ContentRunContent {
 }
 
 func (m *EG_ContentRunContent) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if m.EG_RunLevelElts != nil {
+		for _, c := range m.EG_RunLevelElts {
+			c.MarshalXML(e, xml.StartElement{})
+		}
+	}
 	if m.CustomXml != nil {
 		secustomXml := xml.StartElement{Name: xml.Name{Local: "w:customXml"}}
 		e.EncodeElement(m.CustomXml, secustomXml)
@@ -62,11 +67,6 @@ func (m *EG_ContentRunContent) MarshalXML(e *xml.Encoder, start xml.StartElement
 	if m.R != nil {
 		ser := xml.StartElement{Name: xml.Name{Local: "w:r"}}
 		e.EncodeElement(m.R, ser)
-	}
-	if m.EG_RunLevelElts != nil {
-		for _, c := range m.EG_RunLevelElts {
-			c.MarshalXML(e, xml.StartElement{})
-		}
 	}
 	return nil
 }
